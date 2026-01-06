@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Z-Taxi</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; }
+        .header { text-align: center; padding: 10px 0; }
+        .logo { font-size: 32px; font-weight: bold; color: #ffcc00; text-shadow: 1px 1px 2px #000; }
+        .card { background: white; border-radius: 20px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        h3 { margin-top: 0; color: #333; }
+        select, button { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #ddd; font-size: 16px; margin-top: 10px; }
+        .btn-call { background-color: #ffcc00; color: black; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .btn-call:active { transform: scale(0.98); }
+        .price-tag { color: #27ae60; font-weight: bold; font-size: 18px; margin-top: 10px; display: block; }
+        .popular-places { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+        .place-item { background: #eee; padding: 10px; border-radius: 10px; text-align: center; cursor: pointer; font-size: 14px; }
+        .place-item:hover { background: #e0e0e0; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="logo">Z-Taxi 🚖</div>
+        <p>Tumaningiz xizmatidagi taksi</p>
+    </div>
+
+    <div class="card">
+        <h3>📍 Qayerga boramiz?</h3>
+        <div class="popular-places" id="places">
+            <div class="place-item" onclick="selectPlace('Markaziy Shifoxona')">🏥 Shifoxona</div>
+            <div class="place-item" onclick="selectPlace('Dehqon Bozori')">🛒 Bozor</div>
+            <div class="place-item" onclick="selectPlace('Temir yo\'l Bekati')">🚉 Vokzal</div>
+            <div class="place-item" onclick="selectPlace('Markaziy Bog\'')">🌳 Bog'</div>
+        </div>
+        
+        <input type="text" id="destination" placeholder="Manzilni tanlang yoki yozing..." style="width: 90%; padding: 12px; margin-top: 15px; border-radius: 10px; border: 1px solid #ddd;">
+        <span class="price-tag">Narxi: 10,000 so'm</span>
+    </div>
+
+    <button class="btn-call" onclick="orderTaxi()">TAKSI CHAQIRISH</button>
+
+    <script>
+        let tg = window.Telegram.WebApp;
+        tg.expand(); // Ilovani to'liq ekranga yoyish
+
+        function selectPlace(name) {
+            document.getElementById('destination').value = name;
+        }
+
+        function orderTaxi() {
+            let dest = document.getElementById('destination').value;
+            
+            if (!dest) {
+                // Agar manzil tanlanmasa, to'g'ridan-to'g'ri qo'ng'iroqqa yo'naltiramiz
+                tg.showConfirm("Manzil tanlanmadi. Haydovchi bilan gaplashib kelishasizmi?", (ok) => {
+                    if (ok) window.location.href = "tel:+998901234567"; // Bu yerga haydovchi raqami
+                });
+                return;
+            }
+
+            // GPS ma'lumotlarini olish
+            navigator.geolocation.getCurrentPosition((pos) => {
+                let data = {
+                    loc: dest,
+                    lat: pos.coords.latitude,
+                    lon: pos.coords.longitude,
+                    price: "10,000"
+                };
+                
+                tg.sendData(JSON.stringify(data)); // Ma'lumotni Botga yuborish
+                tg.close();
+            });
+        }
+    </script>
+</body>
+</html>
