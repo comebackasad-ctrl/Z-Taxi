@@ -3,61 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Z-Taxi</title>
+    <title>Z-Taxi Web App</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { font-family: sans-serif; background: #f0f2f5; padding: 20px; text-align: center; }
-        .card { background: white; border-radius: 20px; padding: 30px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-        .logo { font-size: 32px; font-weight: bold; color: #f1c40f; margin-bottom: 10px; }
-        select { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #ddd; margin: 20px 0; font-size: 16px; }
-        .btn { background: #f1c40f; border: none; padding: 18px; width: 100%; border-radius: 15px; font-weight: bold; font-size: 18px; cursor: pointer; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f7f9fc; margin: 0; padding: 20px; display: flex; justify-content: center; }
+        .app-card { width: 100%; max-width: 400px; background: white; border-radius: 25px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; }
+        .logo { font-size: 35px; font-weight: 900; color: #f1c40f; margin-bottom: 5px; }
+        .sub-text { color: #888; margin-bottom: 25px; font-size: 14px; }
+        select { width: 100%; padding: 15px; border-radius: 12px; border: 2px solid #eee; font-size: 16px; margin-bottom: 20px; outline: none; -webkit-appearance: none; }
+        .price-tag { background: #fffde7; border: 1px dashed #f1c40f; padding: 15px; border-radius: 15px; font-weight: bold; margin-bottom: 25px; }
+        .main-button { width: 100%; padding: 18px; background: #f1c40f; border: none; border-radius: 15px; font-size: 18px; font-weight: 800; cursor: pointer; transition: 0.3s; }
+        .main-button:active { transform: scale(0.98); }
     </style>
 </head>
 <body>
-    <div class="card">
+
+    <div class="app-card">
         <div class="logo">Z-Taxi 🚖</div>
-        <p>Qayerga borasiz?</p>
-        <select id="dest">
+        <div class="sub-text">Tezkor va ishonchli taksi xizmati</div>
+
+        <label style="display: block; text-align: left; font-size: 13px; color: #666; margin-left: 5px;">Qayerga borasiz?</label>
+        <select id="location">
             <option value="Markaziy Shifoxona">🏥 Markaziy Shifoxona</option>
             <option value="Dehqon Bozori">🛒 Dehqon Bozori</option>
-            <option value="Vokzal">🚉 Vokzal</option>
+            <option value="Temir yo'l bekati">🚉 Temir yo'l bekati</option>
+            <option value="Markaziy Bog'">🌳 Markaziy Bog'</option>
+            <option value="Boshqa joy (Kelishiladi)">📞 Boshqa / Kelishiladi</option>
         </select>
-        <button id="mainBtn" class="btn" onclick="sendOrder()">TAKSI CHAQIRISH</button>
+
+        <div class="price-tag">Belgilangan narx: 12,000 so'm</div>
+
+        <button id="orderBtn" class="main-button" onclick="placeOrder()">TAKSI CHAQIRISH</button>
     </div>
 
     <script>
         let tg = window.Telegram.WebApp;
         tg.expand();
 
-        async function sendOrder() {
-            const btn = document.getElementById('mainBtn');
-            const destination = document.getElementById('dest').value;
+        async function placeOrder() {
+            const btn = document.getElementById('orderBtn');
+            const target = document.getElementById('location').value;
             const user = tg.initDataUnsafe?.user || {};
             
-            // SHU YERGA YANGI MA'LUMOTLARNI QO'YING
-            const token = "YANGI_TOKENNI_SHU_YERGA_QO'YING";
-            const chat_id = "YANGI_GURUH_ID_RAQAMINI_SHU_YERGA_QO'YING"; 
+            // SIZNING MA'LUMOTLARINGIZ
+            const botToken = "8340813232:AAEJPrKYbXWqyW_68fkgQ62jh9pSQo8wtLA";
+            const chatId = "-1003219641318";
 
-            btn.innerText = "Yuborilmoqda...";
             btn.disabled = true;
+            btn.innerText = "Yuborilmoqda...";
 
-            const text = `🚖 YANGI BUYURTMA!\n📍 Manzil: ${destination}\n👤 Mijoz: ${user.first_name || 'Mijoz'}`;
-            const url = `https://api.telegram.org/bot${token}/sendMessage?chat_id=${chat_id}&text=${encodeURIComponent(text)}`;
+            const message = `🚖 **YANGI BUYURTMA!**\n\n📍 **Manzil:** ${target}\n💰 **Narxi:** 12,000 so'm\n👤 **Mijoz:** ${user.first_name || 'Mijoz'} (${user.username ? '@'+user.username : 'Username yo`q'})\n🆔 **ID:** ${user.id || 'Noma`lum'}`;
 
-            fetch(url).then(res => res.json()).then(data => {
+            const url = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(message)}&parse_mode=Markdown`;
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+
                 if (data.ok) {
-                    alert("Buyurtma yuborildi! ✅");
-                    tg.close();
+                    tg.showPopup({
+                        title: 'Muvaffaqiyatli!',
+                        message: 'Buyurtmangiz haydovchilarga yuborildi. Tez orada aloqaga chiqishadi.',
+                        buttons: [{type: 'ok'}]
+                    }, function() {
+                        tg.close();
+                    });
                 } else {
-                    alert("Xato: " + data.description);
-                    btn.innerText = "TAKSI CHAQIRISH";
+                    alert("Xato yuz berdi: " + data.description);
                     btn.disabled = false;
+                    btn.innerText = "TAKSI CHAQIRISH";
                 }
-            }).catch(() => {
-                alert("Internet xatosi!");
-                btn.innerText = "TAKSI CHAQIRISH";
+            } catch (e) {
+                alert("Internet bilan bog'liq muammo!");
                 btn.disabled = false;
-            });
+                btn.innerText = "TAKSI CHAQIRISH";
+            }
         }
     </script>
 </body>
